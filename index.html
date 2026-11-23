@@ -256,8 +256,8 @@ footer a{color:#ffe2b8}
     <div class="stats" id="stats"></div>
     <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>#</th><th>家庭</th><th>房型</th><th>人數</th><th>午餐</th><th>狀態</th><th>訂金</th></tr></thead>
-        <tbody id="tbody"><tr><td colspan="7">載入中…</td></tr></tbody>
+        <thead><tr><th>#</th><th>家庭</th><th>房型</th><th>人數</th><th>午餐</th><th>狀態</th><th>訂金 30%</th><th>匯款</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="8">載入中…</td></tr></tbody>
       </table>
     </div>
 
@@ -517,8 +517,8 @@ function renderList(){
   $("#tbody").innerHTML = bookings.map((b,i) => {
     const r = roomOf(b.room); const ppl = b.adults ? `${b.adults}大${b.kids||0}小` : "—";
     let st = b.status === "已預定" ? '<span class="st pre">已預定</span>' : b.status === "候補" ? (wn[b.room]=(wn[b.room]||0)+1, `<span class="st wait">候補 ${wn[b.room]}</span>`) : '<span class="st ok">已報名</span>';
-    return `<tr class="${b.status==='候補'?'wait':''}"><td>${i+1}</td><td>${nameOf(b.seat)}</td><td>${r?r.icon+' '+r.name:b.room}</td><td>${ppl}</td><td>${b.lunch===""||b.lunch==null?"—":b.lunch+" 人"}</td><td>${st}</td><td>${b.status==="候補"?"—":(b.paid?'<span class="st ok">✅ 已匯款</span>':'<span class="st wait">未匯款</span>')}</td></tr>`;
-  }).join("") || '<tr><td colspan="7">尚無報名</td></tr>';
+    return `<tr class="${b.status==='候補'?'wait':''}"><td>${i+1}</td><td>${nameOf(b.seat)}</td><td>${r?r.icon+' '+r.name:b.room}</td><td>${ppl}</td><td>${b.lunch===""||b.lunch==null?"—":b.lunch+" 人"}</td><td>${st}</td><td>${depCell(b)}</td><td>${b.status==="候補"?"—":(b.paid?'<span class="st ok">✅ 已匯款</span>':'<span class="st wait">未匯款</span>')}</td></tr>`;
+  }).join("") || '<tr><td colspan="8">尚無報名</td></tr>';
 }
 
 function fillPaySeat(){
@@ -564,6 +564,14 @@ $("#lf").addEventListener("submit", async e => {
   btn.disabled = false; btn.textContent = "送出午餐人數";
 });
 
+function depCell(b){
+  if (b.status === "候補") return "—";
+  const r = roomOf(b.room); if (!r) return "—";
+  const a = +b.adults || 0, k = +b.kids || 0;
+  const exA = Math.max(0, a - r.base), exK = Math.max(0, k - Math.max(0, r.base - a));
+  const total = r.price + exA * (r.extraAdult||0) + exK * (r.extraKid||0);
+  return money(Math.round(total*0.3)) + ((a || k) ? "" : " 起");
+}
 function showDeposit(){
   const b = bookings.find(x => String(x.seat) === $("#pseat").value);
   if (!b){ $("#pest").textContent = "👉 選擇座號後，這裡會顯示您家的 30% 訂金金額"; return; }
