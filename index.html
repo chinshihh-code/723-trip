@@ -219,11 +219,11 @@ footer a{color:#ffe2b8}
             <div class="room-pick" id="room-pick"></div>
           </div>
           <div>
-            <label for="adults">大人人數</label>
+            <label for="adults">大人人數 <small>（12 歲以上，含班上同學）</small></label>
             <select id="adults"></select>
           </div>
           <div>
-            <label for="kids">小孩人數 <small>（含班上同學）</small></label>
+            <label for="kids">小孩人數 <small>（11 歲以下）</small></label>
             <select id="kids"></select>
           </div>
           <div class="full est" id="est">請先選擇房型</div>
@@ -292,7 +292,8 @@ footer a{color:#ffe2b8}
     <details><summary>Q 房費包含什麼？</summary><p>一晚住宿＋隔天早餐（一泊一食）。烤乳豬、披薩 DIY 的費用另計，確定後公告。</p></details>
     <details><summary>Q 怎麼繳費？</summary><p>確定成行後另行公告繳費方式與期限。</p></details>
     <details><summary>Q 怎麼去？</summary><p>各家自行開車前往：苗栗縣卓蘭鎮西坪里西坪 134-7 號（<a href="https://www.google.com/maps/search/?api=1&query=%E8%87%AA%E7%84%B6%E9%A2%A8%E6%83%85%E6%99%AF%E8%A7%80%E6%B8%A1%E5%81%87%E6%B0%91%E5%AE%BF" target="_blank" rel="noopener">Google 地圖</a>）。需要共乘的家庭可以在 LINE 群組揪團。</p></details>
-    <details><summary>Q 露營車可以住幾個人？</summary><p>基本 2 人，最多 4 人（Queen 大床＋雙人沙發床），每加 1 位大人 +$1,000；小孩加人費用確認中，稍後公佈。官網提醒四位大人會比較擠，建議 2 大 2 小。</p></details>
+    <details><summary>Q 露營車可以住幾個人？</summary><p>基本 2 人，最多 4 人（Queen 大床＋雙人沙發床）。加人費用：大人（12 歲以上，含國二同學）每人 +$1,000，11 歲以下每人 +$500。官網提醒四位大人會比較擠。</p></details>
+    <details><summary>Q 四人房可以加人嗎？</summary><p>雅緻四人房可加一床住 5 人：大人 +$1,000、11 歲以下 +$500。加床數量有限，依民宿安排為準。</p></details>
     <details><summary>Q 額滿了怎麼辦？</summary><p>仍可送出報名，系統會自動列為「候補」，依登記時間排序。有人取消時由窗口通知遞補。</p></details>
     <details><summary>Q 可以帶寵物嗎？</summary><p>這次預訂的房型都不可攜帶寵物，房內與陽台全面禁菸。</p></details>
   </div>
@@ -311,22 +312,22 @@ const DEADLINE = new Date("2026-11-27T23:59:59+08:00");
 
 const ROOMS = [
   { id:"camper", name:"雙人星空露營車", icon:"🚐", total:11, price:8000, orig:8800,
-    base:2, max:4, extraAdult:1000,
+    base:2, max:4, extraAdult:1000, extraKid:500,
     img:"https://hocom.tw/Uploads/userfiles/images/31729_cmw2q34tqfcsan9.jpeg",
     link:"https://www.naturalview.tw/h/ServiceDetail?key=v88kb&cont=288247",
-    feats:["Queen 大床＋雙人沙發床，最多 4 人","基本 2 人，每加 1 位大人 +$1,000（小孩加人費用確認中，稍後公佈）","車內可看月亮與星空","車外聯誼空間可烤肉、煮火鍋（食材自備）"] },
+    feats:["Queen 大床＋雙人沙發床，最多 4 人","基本 2 人；加人：大人 +$1,000、11 歲以下 +$500","車內可看月亮與星空","車外聯誼空間可烤肉、煮火鍋（食材自備）"] },
   { id:"quad", name:"雅緻四人房", icon:"🏡", total:7, price:8000, orig:8800,
-    base:4, max:4,
+    base:4, max:5, extraAdult:1000, extraKid:500,
     img:"https://hocom.tw/Uploads/userfiles/images/31729_39ufb03buiay1pt.jpeg",
     link:"https://www.naturalview.tw/h/ServiceDetail?key=v88kb&cont=288245",
-    feats:["兩張 Queen 大床，可住 4 人","一家四口剛剛好，平均每人 $2,000","乾濕分離衛浴、免治馬桶"] },
+    feats:["兩張 Queen 大床，可住 4 人","可加一床住 5 人：大人 +$1,000、11 歲以下 +$500（加床數量有限）","乾濕分離衛浴、免治馬桶"] },
   { id:"double", name:"景觀雙人房", icon:"🌄", total:3, price:6000, orig:6800,
     base:2, max:2,
     img:"https://www.naturalview.tw/Uploads/ClinicService/7d71fd57-3bc0-492a-8d26-0b5450e35e7a.jpg",
     link:"https://www.naturalview.tw/h/ServiceDetail?key=v88kb&cont=288248",
     feats:["一張 Queen 大床，適合 2 人","附陽台，坐擁山景","乾濕分離衛浴、免治馬桶"] },
   { id:"deluxe", name:"豪華四人房", icon:"👑", total:1, price:10000, orig:10800,
-    base:4, max:4,
+    base:4, max:5, extraAdult:1000, extraKid:500,
     img:"https://hocom.tw/Uploads/userfiles/images/31729_195361kg13efnym.jpeg",
     link:"https://www.naturalview.tw/h/ServiceDetail?key=v88kb&cont=338883",
     feats:["兩張 Queen 大床，可住 4 人","豪華景觀房，附陽台"] },
@@ -407,8 +408,8 @@ function opts(sel, from, to, val){
 function onRoom(){
   document.querySelectorAll(".room-pick label").forEach(l => l.classList.toggle("on", l.querySelector("input").checked));
   const r = roomOf(this.value);
-  opts($("#adults"), 1, r.max, Math.min(2, r.max));
-  opts($("#kids"), 0, r.max - 1, r.max >= 3 ? 1 : 0);
+  opts($("#adults"), 1, r.max, Math.min(r.base, 2));
+  opts($("#kids"), 0, r.max - Math.min(r.base, 2), 0);
   est();
 }
 function est(){
@@ -418,9 +419,12 @@ function est(){
   // 調整小孩上限
   const kmax = r.max - a, kSel = $("#kids");
   if (kSel.options.length - 1 !== kmax){ opts(kSel, 0, kmax, Math.min(k, kmax)); }
-  let total = r.price, note = "";
-  if (r.extraAdult && a > r.base){ total += (a - r.base) * r.extraAdult; note = `（含加大人 ${a - r.base} 位 × $1,000）`; }
-  if (r.extraAdult && a + +kSel.value > r.base && a <= r.base) note = "（小孩加人費用確認中，稍後公佈）";
+  const kk = +kSel.value;
+  const exA = Math.max(0, a - r.base), exK = Math.max(0, kk - Math.max(0, r.base - a));
+  let total = r.price + exA * (r.extraAdult||0) + exK * (r.extraKid||0), parts = [];
+  if (exA) parts.push(`加大人 ${exA} 位 × $1,000`);
+  if (exK) parts.push(`加小孩 ${exK} 位 × $500`);
+  const note = parts.length ? `（含${parts.join("、")}）` : "";
   $("#est").innerHTML = `💰 房費估算：<b>${money(total)}</b> ${note}　共 ${a + +kSel.value} 人`;
 }
 $("#adults").addEventListener("change", est);
