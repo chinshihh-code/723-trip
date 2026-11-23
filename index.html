@@ -147,8 +147,9 @@ footer a{color:#ffe2b8}
       <div class="cd-box"><b id="cd-d">-</b><span>天</span></div>
       <div class="cd-box"><b id="cd-h">-</b><span>時</span></div>
       <div class="cd-box"><b id="cd-m">-</b><span>分</span></div>
-      <span style="opacity:.9">11/27（五）截止｜房間有限，先搶先贏</span>
+      <span style="opacity:.9">11/25（三）截止｜房間有限，先搶先贏</span>
     </div>
+    <p style="margin:0 0 18px;font-weight:700;color:#ffe2b8">⚡ 時間緊迫，請大家先決定房型！週三確認後由軒銘爸爸先代付訂金，付款細節後續再討論。</p>
     <a class="btn" href="#signup">立即選房報名</a>
     <a class="btn ghost" href="#rooms">先看房型</a>
   </div>
@@ -195,10 +196,10 @@ footer a{color:#ffe2b8}
     <div class="panel rules" style="margin-bottom:18px">
       <b>📋 報名須知</b>
       <ol>
-        <li><b>11/27（五）23:59 截止</b>，依送出時間排序，<b>先搶先贏</b>。</li>
+        <li><b>11/25（三）23:59 截止</b>，依送出時間排序，<b>先搶先贏</b>。<b>時間緊迫，請大家先決定房型。</b></li>
         <li>每戶限報 1 間房；房型額滿後仍可登記<b>候補</b>，有人取消時依序遞補，由窗口通知。</li>
         <li>送出後如需修改或取消，請直接聯絡窗口。</li>
-        <li><b>繳費方式：確定成行後另行公告。</b></li>
+        <li><b>訂金：週三確認房間後，由軒銘爸爸先代付給民宿；各家付款細節後續再討論。</b></li>
         <li>聯絡窗口：<b>軒銘爸爸／軒銘媽媽</b></li>
       </ol>
     </div>
@@ -290,7 +291,7 @@ footer a{color:#ffe2b8}
   <div class="wrap">
     <h2>常見問題</h2>
     <details><summary>Q 房費包含什麼？</summary><p>一晚住宿＋隔天早餐（一泊一食）。烤乳豬、披薩 DIY 的費用另計，確定後公告。</p></details>
-    <details><summary>Q 怎麼繳費？</summary><p>確定成行後另行公告繳費方式與期限。</p></details>
+    <details><summary>Q 怎麼繳費？</summary><p>週三（11/25）確認房間後，由軒銘爸爸先代付訂金給民宿；各家的付款方式與期限後續再討論。</p></details>
     <details><summary>Q 怎麼去？</summary><p>各家自行開車前往：苗栗縣卓蘭鎮西坪里西坪 134-7 號（<a href="https://www.google.com/maps/search/?api=1&query=%E8%87%AA%E7%84%B6%E9%A2%A8%E6%83%85%E6%99%AF%E8%A7%80%E6%B8%A1%E5%81%87%E6%B0%91%E5%AE%BF" target="_blank" rel="noopener">Google 地圖</a>）。需要共乘的家庭可以在 LINE 群組揪團。</p></details>
     <details><summary>Q 露營車可以住幾個人？</summary><p>基本 2 人，最多 4 人（Queen 大床＋雙人沙發床）。加人費用：大人（12 歲以上，含國二同學）每人 +$1,000，11 歲以下每人 +$500。官網提醒四位大人會比較擠。</p></details>
     <details><summary>Q 四人房可以加人嗎？</summary><p>雅緻四人房可加一床住 5 人：大人 +$1,000、11 歲以下 +$500。加床數量有限，依民宿安排為準。</p></details>
@@ -308,7 +309,7 @@ footer a{color:#ffe2b8}
 /* ========= 設定 ========= */
 // 部署 Google Apps Script 後，把網址貼在這裡
 const API_URL = "https://script.google.com/macros/s/AKfycbytzhnRWZaiibm5fKL_h3HIGdxP9ilqaNIKDNlj35d65vZPR0F26PAN3zxOkvP1-s2B/exec";
-const DEADLINE = new Date("2026-11-27T23:59:59+08:00");
+const DEADLINE = new Date("2026-11-25T23:59:59+08:00");
 
 const ROOMS = [
   { id:"camper", name:"雙人星空露營車", icon:"🚐", total:11, price:8000, orig:8800,
@@ -321,12 +322,12 @@ const ROOMS = [
     img:"https://hocom.tw/Uploads/userfiles/images/31729_39ufb03buiay1pt.jpeg",
     link:"https://www.naturalview.tw/h/ServiceDetail?key=v88kb&cont=288245",
     feats:["兩張 Queen 大床，可住 4 人","可加一床住 5 人：大人 +$1,000、11 歲以下 +$500（加床數量有限）","乾濕分離衛浴、免治馬桶"] },
-  { id:"double", name:"景觀雙人房", icon:"🌄", total:3, price:6000, orig:6800,
+  { id:"double", name:"景觀雙人房", icon:"🌄", total:2, price:6000, orig:6800,
     base:2, max:2,
     img:"https://www.naturalview.tw/Uploads/ClinicService/7d71fd57-3bc0-492a-8d26-0b5450e35e7a.jpg",
     link:"https://www.naturalview.tw/h/ServiceDetail?key=v88kb&cont=288248",
     feats:["一張 Queen 大床，適合 2 人","附陽台，坐擁山景","乾濕分離衛浴、免治馬桶"] },
-  { id:"deluxe", name:"豪華四人房", icon:"👑", total:1, price:10000, orig:10800,
+  { id:"deluxe", name:"豪華四人房", icon:"👑", hidden:true, total:1, price:10000, orig:10800,
     base:4, max:5, extraAdult:1000, extraKid:500,
     img:"https://hocom.tw/Uploads/userfiles/images/31729_195361kg13efnym.jpeg",
     link:"https://www.naturalview.tw/h/ServiceDetail?key=v88kb&cont=338883",
@@ -371,7 +372,7 @@ tick(); setInterval(tick, 30000);
 /* ========= 房型卡片 ========= */
 function renderRooms(){
   const c = counts();
-  $("#room-cards").innerHTML = ROOMS.map(r => {
+  $("#room-cards").innerHTML = ROOMS.filter(r => !r.hidden).map(r => {
     const n = left(r, c);
     const badge = n === 0 ? '<span class="badge full">已額滿・可候補</span>'
                : `<span class="badge ${n<=2?'low':''}">剩 ${n} 間</span>`;
@@ -387,7 +388,7 @@ function renderRooms(){
 
   // 表單房型選項
   const cur = (document.querySelector('input[name=room]:checked')||{}).value;
-  $("#room-pick").innerHTML = ROOMS.map(r => {
+  $("#room-pick").innerHTML = ROOMS.filter(r => !r.hidden).map(r => {
     const n = left(r, c);
     return `<label class="${cur===r.id?'on':''}"><input type="radio" name="room" value="${r.id}" ${cur===r.id?'checked':''}>
       <span><span class="rp-name">${r.icon} ${r.name}</span><br>
@@ -446,7 +447,7 @@ $("#f").addEventListener("submit", async e => {
     const j = await res.json();
     if (!j.ok) showMsg("err", "❌ " + j.error);
     else if (j.status === "候補") showMsg("warn", `⏳ 已登記<b>候補</b>（${roomOf(room).name} 候補第 ${j.waitNo} 位）。有人取消時窗口會通知您。`);
-    else showMsg("ok", `🎉 報名成功！${nameOf(seat)}：${roomOf(room).name}。繳費方式確定成行後另行公告。`);
+    else showMsg("ok", `🎉 報名成功！${nameOf(seat)}：${roomOf(room).name}。付款細節後續再討論。`);
     if (j.ok){ $("#f").reset(); }
     await load();
   } catch(err){ showMsg("err", "網路錯誤，請稍後再試，或聯絡窗口。"); }
@@ -458,7 +459,7 @@ function renderList(){
   const c = counts(), wait = bookings.filter(b=>b.status==="候補").length;
   const fams = bookings.filter(b=>b.status!=="候補").length;
   $("#stats").innerHTML = `<div class="stat">已報名 <b>${fams}</b> 戶</div>` +
-    ROOMS.map(r => `<div class="stat">${r.icon} ${r.name} <b>${c[r.id]}/${r.total}</b></div>`).join("") +
+    ROOMS.filter(r => !r.hidden).map(r => `<div class="stat">${r.icon} ${r.name} <b>${c[r.id]}/${r.total}</b></div>`).join("") +
     (wait ? `<div class="stat">候補 <b>${wait}</b> 戶</div>` : "");
   const wn = {};
   $("#tbody").innerHTML = bookings.map((b,i) => {
@@ -480,7 +481,7 @@ async function load(){
     $("#updated").textContent = "報名系統即將開放（目前顯示已預定家庭）";
   }
   renderRooms(); fillSeat(); renderList();
-  if (new Date() > DEADLINE) $("#form-panel").innerHTML = '<div class="closed">報名已於 11/27 截止。如需候補或異動，請聯絡軒銘爸爸／媽媽。</div>';
+  if (new Date() > DEADLINE) $("#form-panel").innerHTML = '<div class="closed">報名已於 11/25 截止。如需候補或異動，請聯絡軒銘爸爸／媽媽。</div>';
 }
 load();
 setInterval(load, 60000);
