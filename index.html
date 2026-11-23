@@ -168,7 +168,7 @@ footer a{color:#ffe2b8}
     <p class="sub">全班一起出遊的機會不多，這次把好玩的都排進來了</p>
     <div class="hl-grid">
       <div class="hl"><div class="ic">🌿</div><h3>3,000 坪山景大草原</h3><p>推開門就是一大片綠地，孩子跑跳、大人散步聊天，手機可以先收起來。</p></div>
-      <div class="hl"><div class="ic">🐷</div><h3>烤乳豬之夜<span class="pending">時間確認中</span></h3><p>全班圍著烤乳豬，是班遊才有的豪邁場面！預計週六晚上。</p></div>
+      <div class="hl"><div class="ic">🐷</div><h3>烤乳豬之夜<span class="pending">行程確認中</span></h3><p>全班圍著烤乳豬，是班遊才有的豪邁場面！是否安排、時間與費用確認中。</p></div>
       <div class="hl"><div class="ic">🍕</div><h3>披薩 DIY<span class="pending">時間確認中</span></h3><p>自己桿皮、自己鋪料，同學間比誰的最好看（也最好吃）。</p></div>
       <div class="hl"><div class="ic">✨</div><h3>星空露營車</h3><p>不用搭帳篷的露營，躺在車裡就能看月亮和星空——孩子最想住的一款。</p></div>
       <div class="hl"><div class="ic">🎬</div><h3>偶像劇取景地</h3><p>《我可能不會愛你》曾在這裡取景，草原上的白色造景超好拍。</p></div>
@@ -261,6 +261,25 @@ footer a{color:#ffe2b8}
       </table>
     </div>
 
+    <div class="panel" id="lunch-panel" style="margin-top:22px">
+      <h3 style="margin:0 0 4px;color:var(--night)">🐟 登記／修改 1/31（日）活魚午餐人數</h3>
+      <p class="sub" style="margin:0 0 14px">已訂房的家庭（包含已預定的家庭）可以在這裡登記或修改午餐人數。</p>
+      <form id="lf" novalidate>
+        <div class="form-grid">
+          <div>
+            <label for="lseat">學生座號／名字</label>
+            <select id="lseat"><option value="">請選擇</option></select>
+          </div>
+          <div>
+            <label for="lcount">午餐人數 <small>（不參加請選 0）</small></label>
+            <select id="lcount"><option value="">請選擇</option><option value="0">0 人</option><option value="1">1 人</option><option value="2">2 人</option><option value="3">3 人</option><option value="4">4 人</option><option value="5">5 人</option><option value="6">6 人</option><option value="7">7 人</option><option value="8">8 人</option><option value="9">9 人</option><option value="10">10 人</option></select>
+          </div>
+          <div class="full"><button class="btn" type="submit" id="lsubmit">送出午餐人數</button></div>
+        </div>
+      </form>
+      <div class="msg" id="lmsg"></div>
+    </div>
+
     <div class="panel" id="pay-panel" style="margin-top:22px">
       <h3 style="margin:0 0 4px;color:var(--night)">💳 回報匯款</h3>
       <p class="sub" style="margin:0 0 14px">匯完訂金後請在這裡回報，方便軒銘爸爸／媽媽對帳。帳號後五碼只會存在試算表，不會顯示在網頁上。</p>
@@ -297,7 +316,7 @@ footer a{color:#ffe2b8}
           <li><span class="t">上午～中午</span>台北出發，自行開車前往苗栗卓蘭</li>
           <li><span class="t">15:30 起</span>辦理入住，草原自由活動</li>
           <li><span class="t">時間確認中</span>🍕 披薩 DIY</li>
-          <li><span class="t">時間確認中（預計晚上）</span>🐷 烤乳豬晚餐</li>
+          <li><span class="t">行程確認中</span>🐷 烤乳豬晚餐</li>
           <li><span class="t">晚上</span>✨ 星空夜聊（22:00 後請降低音量）</li>
         </ul>
       </div>
@@ -524,6 +543,26 @@ $("#pf").addEventListener("submit", async e => {
   btn.disabled = false; btn.textContent = "送出匯款回報";
 });
 
+function fillLunchSeat(){
+  const cur = $("#lseat").value;
+  const list = bookings.filter(b => b.status !== "候補");
+  $("#lseat").innerHTML = '<option value="">請選擇</option>' + list.map(b =>
+    `<option value="${b.seat}" ${String(b.seat)===cur?'selected':''}>${nameOf(b.seat)}（目前 ${b.lunch===""||b.lunch==null?"未登記":b.lunch+" 人"}）</option>`).join("");
+}
+$("#lf").addEventListener("submit", async e => {
+  e.preventDefault();
+  const m = $("#lmsg"), show = (t,h) => { m.className = "msg " + t; m.innerHTML = h; };
+  const seat = $("#lseat").value, lunch = $("#lcount").value;
+  if (!seat || lunch === "") return show("err", "請選擇學生座號和午餐人數。");
+  const btn = $("#lsubmit"); btn.disabled = true; btn.textContent = "送出中…";
+  try {
+    const j = await (await fetch(API_URL, { method:"POST", body: JSON.stringify({ action:"lunch", seat, lunch }) })).json();
+    if (j.ok) { show("ok", `✅ 已登記 ${nameOf(seat)}：1/31 活魚午餐 ${lunch} 人。`); $("#lf").reset(); await load(); }
+    else show("err", "❌ " + j.error);
+  } catch(err) { show("err", "網路錯誤，請稍後再試，或聯絡窗口。"); }
+  btn.disabled = false; btn.textContent = "送出午餐人數";
+});
+
 async function load(){
   if (API_URL){
     try {
@@ -535,7 +574,7 @@ async function load(){
     bookings = SEED.slice();
     $("#updated").textContent = "報名系統即將開放（目前顯示已預定家庭）";
   }
-  renderRooms(); fillSeat(); renderList(); fillPaySeat();
+  renderRooms(); fillSeat(); renderList(); fillPaySeat(); fillLunchSeat();
   if (new Date() > DEADLINE) $("#form-panel").innerHTML = '<div class="closed">報名已於 11/25 截止。如需候補或異動，請聯絡軒銘爸爸／媽媽。</div>';
 }
 load();
