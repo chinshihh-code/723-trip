@@ -381,6 +381,7 @@ const ROOMS = [
     img:"https://hocom.tw/Uploads/userfiles/images/31729_195361kg13efnym.jpeg",
     link:"https://www.naturalview.tw/h/ServiceDetail?key=v88kb&cont=338883",
     feats:["兩張 Queen 大床，可住 4 人","豪華景觀房，附陽台"] },
+  { id:"lunch", name:"只參加午餐（不入住）", icon:"🐟", lunchOnly:true, total:999, price:0, orig:0, base:0, max:0, feats:[] },
 ];
 
 const STUDENTS = [[1,"沁婷"],[2,"奕文"],[3,"曼熹"],[4,"姵萱"],[5,"雨淇"],[6,"筠捷"],[7,"萱芛"],[8,"浿萱"],[9,"羽安"],[10,"筑甯"],[11,"歆縈"],[12,"薇年"],[13,"閔晴"],[14,"子瑄"],[15,"子綺"],[16,"雨洮"],[17,"予晴"],[21,"昱緯"],[23,"宥均"],[24,"祥恩"],[25,"可為"],[26,"澤羽"],[27,"宸翔"],[28,"宸鈞"],[29,"升澤"],[30,"尹澤"],[31,"弘昕"],[32,"霆家"],[33,"承濬"],[34,"軒銘"],[35,"昀達"],[36,"上恩"],[37,"兆廷"]];
@@ -422,7 +423,7 @@ tick(); setInterval(tick, 30000);
 /* ========= 房型卡片 ========= */
 function renderRooms(){
   const c = counts();
-  $("#room-cards").innerHTML = ROOMS.filter(r => !r.hidden).map(r => {
+  $("#room-cards").innerHTML = ROOMS.filter(r => !r.hidden && !r.lunchOnly).map(r => {
     const n = left(r, c);
     const badge = n === 0 ? '<span class="badge full">已額滿・可候補</span>'
                : `<span class="badge ${n<=2?'low':''}">剩 ${n} 間</span>`;
@@ -442,14 +443,14 @@ function renderRooms(){
     const n = left(r, c);
     return `<label class="${cur===r.id?'on':''}"><input type="radio" name="room" value="${r.id}" ${cur===r.id?'checked':''}>
       <span><span class="rp-name">${r.icon} ${r.name}</span><br>
-      <span class="rp-left">${money(r.price)}｜${n>0?`剩 ${n} 間`:'已額滿，送出將列候補'}${r.max<=r.base?'｜不可加人':''}</span></span></label>`;
+      <span class="rp-left">${r.lunchOnly?'不入住・不需房費訂金':money(r.price)+'｜'+(n>0?`剩 ${n} 間`:'已額滿，送出將列候補')+(r.max<=r.base?'｜不可加人':'')}</span></span></label>`;
   }).join("");
   document.querySelectorAll('input[name=room]').forEach(el => el.addEventListener("change", onRoom));
 }
 
 /* ========= 表單 ========= */
 function fillSeat(){
-  const taken = new Set(bookings.map(b => +b.seat));
+  const taken = new Set(bookings.filter(b => b.status !== "只參加午餐").map(b => +b.seat));
   $("#seat").innerHTML = '<option value="">請選擇</option>' + STUDENTS.map(([n, s]) =>
     `<option value="${n}" ${taken.has(n)?'disabled':''}>${n}號 ${s}${taken.has(n)?'（已報名）':''}</option>`).join("");
 }
@@ -459,6 +460,7 @@ function opts(sel, from, to, val){
 function onRoom(){
   document.querySelectorAll(".room-pick label").forEach(l => l.classList.toggle("on", l.querySelector("input").checked));
   const r = roomOf(this.value);
+  if (r.lunchOnly){ opts($("#adults"), 0, 0, 0); opts($("#kids"), 0, 0, 0); est(); return; }
   opts($("#adults"), 1, r.max, Math.min(r.base, 2));
   opts($("#kids"), 0, r.max - Math.min(r.base, 2), 0);
   est();
@@ -467,6 +469,7 @@ function est(){
   const id = (document.querySelector('input[name=room]:checked')||{}).value;
   if (!id){ $("#est").textContent = "👉 選擇房型後，這裡會顯示房費和 30% 訂金金額"; return; }
   const r = roomOf(id), a = +$("#adults").value, k = +$("#kids").value, p = a + k;
+  if (r.lunchOnly){ lastTotal = 0; $("#est").innerHTML = "🐟 不入住，只參加 1/31（日）中午活魚午餐，不需付房費訂金。請在下方選擇午餐人數。"; return; }
   // 調整小孩上限
   const kmax = r.max - a, kSel = $("#kids");
   if (kSel.options.length - 1 !== kmax){ opts(kSel, 0, kmax, Math.min(k, kmax)); }
@@ -489,6 +492,7 @@ $("#f").addEventListener("submit", async e => {
   const room = (document.querySelector('input[name=room]:checked')||{}).value;
   const seat = $("#seat").value, parent = $("#parent").value.trim();
   if (!seat || !parent || !room || $("#lunch").value === "") return showMsg("err", "請填寫座號、聯絡家長、房型和午餐人數。");
+  if (room === "lunch" && !(+$("#lunch").value > 0)) return showMsg("err", "只參加午餐請選擇至少 1 人。");
   if (new Date() > DEADLINE) return showMsg("err", "報名已截止，請直接聯絡窗口。");
   if (!API_URL) return showMsg("warn", "報名系統設定中，即將開放，請稍候再試。");
   const payload = { seat, parent, room, adults: $("#adults").value, kids: $("#kids").value, lunch: $("#lunch").value, note: $("#note").value.trim() };
@@ -499,6 +503,7 @@ $("#f").addEventListener("submit", async e => {
     const j = await res.json();
     if (!j.ok) showMsg("err", "❌ " + j.error);
     else if (j.status === "候補") showMsg("warn", `⏳ 已登記<b>候補</b>（${roomOf(room).name} 候補第 ${j.waitNo} 位）。有人取消時窗口會通知您。`);
+    else if (room === "lunch") showMsg("ok", `🎉 已報名！${nameOf(seat)}：1/31（日）中午活魚午餐 ${payload.lunch} 人（不入住）。`);
     else showMsg("ok", `🎉 報名成功！${nameOf(seat)}：${roomOf(room).name}。<br>請於 <b>11/27（五）前</b>預付房費 30% 訂金 <b>${money(Math.round(sentTotal*0.3))}</b> 給軒銘爸爸／媽媽。`);
     if (j.ok){ $("#f").reset(); }
     await load();
@@ -509,21 +514,21 @@ $("#f").addEventListener("submit", async e => {
 /* ========= 名單 ========= */
 function renderList(){
   const c = counts(), wait = bookings.filter(b=>b.status==="候補").length;
-  const fams = bookings.filter(b=>b.status!=="候補").length;
+  const fams = bookings.filter(b=>b.status!=="候補" && b.status!=="只參加午餐").length;
   $("#stats").innerHTML = `<div class="stat">已報名 <b>${fams}</b> 戶</div>` + `<div class="stat">🐟 午餐 <b>${bookings.reduce((t,b)=>t+(+b.lunch||0),0)}</b> 人</div>` +
-    ROOMS.filter(r => !r.hidden).map(r => `<div class="stat">${r.icon} ${r.name} <b>${c[r.id]}/${r.total}</b></div>`).join("") +
+    ROOMS.filter(r => !r.hidden && !r.lunchOnly).map(r => `<div class="stat">${r.icon} ${r.name} <b>${c[r.id]}/${r.total}</b></div>`).join("") +
     (wait ? `<div class="stat">候補 <b>${wait}</b> 戶</div>` : "");
   const wn = {};
   $("#tbody").innerHTML = bookings.map((b,i) => {
     const r = roomOf(b.room); const ppl = b.adults ? `${b.adults}大${b.kids||0}小` : "—";
-    let st = b.status === "已預定" ? '<span class="st pre">已預定</span>' : b.status === "候補" ? (wn[b.room]=(wn[b.room]||0)+1, `<span class="st wait">候補 ${wn[b.room]}</span>`) : '<span class="st ok">已報名</span>';
-    return `<tr class="${b.status==='候補'?'wait':''}"><td>${i+1}</td><td>${nameOf(b.seat)}</td><td>${r?r.icon+' '+r.name:b.room}</td><td>${ppl}</td><td>${b.lunch===""||b.lunch==null?"—":b.lunch+" 人"}</td><td>${st}</td><td>${depCell(b)}</td><td>${b.status==="候補"?"—":(b.paid?'<span class="st ok">✅ 已匯款</span>':'<span class="st wait">未匯款</span>')}</td></tr>`;
+    let st = b.status === "已預定" ? '<span class="st pre">已預定</span>' : b.status === "候補" ? (wn[b.room]=(wn[b.room]||0)+1, `<span class="st wait">候補 ${wn[b.room]}</span>`) : b.status === "只參加午餐" ? '<span class="st pre">只參加午餐</span>' : '<span class="st ok">已報名</span>';
+    return `<tr class="${b.status==='候補'?'wait':''}"><td>${i+1}</td><td>${nameOf(b.seat)}</td><td>${r?r.icon+' '+r.name:b.room}</td><td>${ppl}</td><td>${b.lunch===""||b.lunch==null?"—":b.lunch+" 人"}</td><td>${st}</td><td>${depCell(b)}</td><td>${(b.status==="候補"||b.status==="只參加午餐")?"—":(b.paid?'<span class="st ok">✅ 已匯款</span>':'<span class="st wait">未匯款</span>')}</td></tr>`;
   }).join("") || '<tr><td colspan="8">尚無報名</td></tr>';
 }
 
 function fillPaySeat(){
   const cur = $("#pseat").value;
-  const list = bookings.filter(b => b.status !== "候補");
+  const list = bookings.filter(b => b.status !== "候補" && b.status !== "只參加午餐");
   $("#pseat").innerHTML = '<option value="">請選擇</option>' + list.map(b =>
     `<option value="${b.seat}" ${String(b.seat)===cur?'selected':''}>${nameOf(b.seat)}${b.paid?'（已回報）':''}</option>`).join("");
 }
@@ -565,7 +570,7 @@ $("#lf").addEventListener("submit", async e => {
 });
 
 function depCell(b){
-  if (b.status === "候補") return "—";
+  if (b.status === "候補" || b.status === "只參加午餐") return "—";
   const r = roomOf(b.room); if (!r) return "—";
   const a = +b.adults || 0, k = +b.kids || 0;
   const exA = Math.max(0, a - r.base), exK = Math.max(0, k - Math.max(0, r.base - a));
