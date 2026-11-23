@@ -157,7 +157,7 @@ footer a{color:#ffe2b8}
 
 <div class="wrap">
   <div class="video">
-    <iframe src="https://www.youtube-nocookie.com/embed/fqUqZ4Ea8GE" title="自然風情景觀渡假民宿介紹影片" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe src="https://www.youtube-nocookie.com/embed/bTK8f3SbA44" title="自然風情景觀渡假民宿介紹影片" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -256,9 +256,31 @@ footer a{color:#ffe2b8}
     <div class="stats" id="stats"></div>
     <div style="overflow-x:auto">
       <table>
-        <thead><tr><th>#</th><th>家庭</th><th>房型</th><th>人數</th><th>午餐</th><th>狀態</th></tr></thead>
-        <tbody id="tbody"><tr><td colspan="6">載入中…</td></tr></tbody>
+        <thead><tr><th>#</th><th>家庭</th><th>房型</th><th>人數</th><th>午餐</th><th>狀態</th><th>訂金</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="7">載入中…</td></tr></tbody>
       </table>
+    </div>
+
+    <div class="panel" id="pay-panel" style="margin-top:22px">
+      <h3 style="margin:0 0 4px;color:var(--night)">💳 回報匯款</h3>
+      <p class="sub" style="margin:0 0 14px">匯完訂金後請在這裡回報，方便軒銘爸爸／媽媽對帳。帳號後五碼只會存在試算表，不會顯示在網頁上。</p>
+      <form id="pf" novalidate>
+        <div class="form-grid">
+          <div>
+            <label for="pseat">學生座號／名字</label>
+            <select id="pseat"><option value="">請選擇</option></select>
+          </div>
+          <div>
+            <label for="plast5">匯款帳號後五碼</label>
+            <input id="plast5" inputmode="numeric" maxlength="5" placeholder="例：12345">
+          </div>
+          <div class="full">
+            <label style="display:flex;gap:8px;align-items:center;font-weight:700;cursor:pointer"><input type="checkbox" id="ppaid" style="width:auto"> 我已匯款訂金</label>
+          </div>
+          <div class="full"><button class="btn" type="submit" id="psubmit">送出匯款回報</button></div>
+        </div>
+      </form>
+      <div class="msg" id="pmsg"></div>
     </div>
   </div>
 </section>
@@ -475,9 +497,32 @@ function renderList(){
   $("#tbody").innerHTML = bookings.map((b,i) => {
     const r = roomOf(b.room); const ppl = b.adults ? `${b.adults}大${b.kids||0}小` : "—";
     let st = b.status === "已預定" ? '<span class="st pre">已預定</span>' : b.status === "候補" ? (wn[b.room]=(wn[b.room]||0)+1, `<span class="st wait">候補 ${wn[b.room]}</span>`) : '<span class="st ok">已報名</span>';
-    return `<tr class="${b.status==='候補'?'wait':''}"><td>${i+1}</td><td>${nameOf(b.seat)}</td><td>${r?r.icon+' '+r.name:b.room}</td><td>${ppl}</td><td>${b.lunch===""||b.lunch==null?"—":b.lunch+" 人"}</td><td>${st}</td></tr>`;
-  }).join("") || '<tr><td colspan="6">尚無報名</td></tr>';
+    return `<tr class="${b.status==='候補'?'wait':''}"><td>${i+1}</td><td>${nameOf(b.seat)}</td><td>${r?r.icon+' '+r.name:b.room}</td><td>${ppl}</td><td>${b.lunch===""||b.lunch==null?"—":b.lunch+" 人"}</td><td>${st}</td><td>${b.status==="候補"?"—":(b.paid?'<span class="st ok">✅ 已匯款</span>':'<span class="st wait">未匯款</span>')}</td></tr>`;
+  }).join("") || '<tr><td colspan="7">尚無報名</td></tr>';
 }
+
+function fillPaySeat(){
+  const cur = $("#pseat").value;
+  const list = bookings.filter(b => b.status !== "候補");
+  $("#pseat").innerHTML = '<option value="">請選擇</option>' + list.map(b =>
+    `<option value="${b.seat}" ${String(b.seat)===cur?'selected':''}>${nameOf(b.seat)}${b.paid?'（已回報）':''}</option>`).join("");
+}
+$("#pf").addEventListener("submit", async e => {
+  e.preventDefault();
+  const m = $("#pmsg"), show = (t,h) => { m.className = "msg " + t; m.innerHTML = h; };
+  const seat = $("#pseat").value, last5 = $("#plast5").value.trim();
+  if (!seat) return show("err", "請選擇學生座號。");
+  if (!/^\d{5}$/.test(last5)) return show("err", "請輸入 5 位數字的帳號後五碼。");
+  if (!$("#ppaid").checked) return show("err", "請勾選「我已匯款訂金」。");
+  if (!API_URL) return show("warn", "系統設定中，請稍後再試。");
+  const btn = $("#psubmit"); btn.disabled = true; btn.textContent = "送出中…";
+  try {
+    const j = await (await fetch(API_URL, { method:"POST", body: JSON.stringify({ action:"pay", seat, last5 }) })).json();
+    if (j.ok) { show("ok", `✅ 已收到 ${nameOf(seat)} 的匯款回報，謝謝！`); $("#pf").reset(); await load(); }
+    else show("err", "❌ " + j.error);
+  } catch(err) { show("err", "網路錯誤，請稍後再試，或聯絡窗口。"); }
+  btn.disabled = false; btn.textContent = "送出匯款回報";
+});
 
 async function load(){
   if (API_URL){
@@ -490,7 +535,7 @@ async function load(){
     bookings = SEED.slice();
     $("#updated").textContent = "報名系統即將開放（目前顯示已預定家庭）";
   }
-  renderRooms(); fillSeat(); renderList();
+  renderRooms(); fillSeat(); renderList(); fillPaySeat();
   if (new Date() > DEADLINE) $("#form-panel").innerHTML = '<div class="closed">報名已於 11/25 截止。如需候補或異動，請聯絡軒銘爸爸／媽媽。</div>';
 }
 load();
