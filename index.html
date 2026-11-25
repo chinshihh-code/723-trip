@@ -130,9 +130,20 @@ footer a{color:#ffe2b8}
   .sticky-cta{display:block}
   th:nth-child(4),td:nth-child(4){display:none}
 }
+
+/* tabs */
+.tabs{position:sticky;top:0;z-index:30;display:flex;background:var(--night);box-shadow:0 2px 10px #0003}
+.tabs button{flex:1;border:none;background:transparent;color:#dfe3f0;font:inherit;font-weight:700;font-size:1rem;padding:13px 6px;cursor:pointer;border-bottom:3px solid transparent}
+.tabs button.on{color:#fff;border-bottom-color:var(--sun);background:#ffffff14}
+@media(max-width:640px){.tabs button{font-size:.92rem;padding:12px 4px}}
 </style>
 </head>
 <body>
+<nav class="tabs" id="tabs">
+  <button type="button" data-t="intro">🌄 活動介紹</button>
+  <button type="button" data-t="signup">📝 選房報名</button>
+  <button type="button" data-t="list">📋 已報名名單</button>
+</nav>
 
 <!-- ===== 主視覺 ===== -->
 <header class="hero">
@@ -192,7 +203,7 @@ footer a{color:#ffe2b8}
 <section id="signup">
   <div class="wrap">
     <h2>選房報名</h2>
-    <p class="sub">送出後會立即顯示在下方「已報名名單」</p>
+    <p class="sub">送出後可以到 <a href="#list">📋 已報名名單</a> 分頁確認</p>
 
     <div class="panel rules" style="margin-bottom:18px">
       <b>📋 報名須知</b>
@@ -605,6 +616,34 @@ async function load(){
 }
 load();
 setInterval(load, 60000);
+
+/* ========= 分頁 ========= */
+(function(){
+  const byId = id => document.getElementById(id);
+  const hero = document.querySelector('header.hero');
+  const vid = document.querySelector('.video') && document.querySelector('.video').parentElement;
+  const hl = document.querySelector('.hl-grid') && document.querySelector('.hl-grid').closest('section');
+  const sw = byId('signup').querySelector('.wrap');
+  ['lunch-panel','pay-panel'].forEach(id => { const el = byId(id); if (el) sw.appendChild(el); });
+  const groups = { intro:[hero, vid, hl, byId('rooms'), byId('schedule'), byId('faq')], signup:[byId('signup')], list:[byId('list')] };
+  const map = { signup:'signup', list:'list', 'lunch-panel':'signup', 'pay-panel':'signup' };
+  function show(t, h){
+    Object.entries(groups).forEach(([k, els]) => els.forEach(el => { if (el) el.style.display = (k === t) ? '' : 'none'; }));
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+    const cta = document.querySelector('.sticky-cta'); if (cta) cta.style.visibility = (t === 'signup') ? 'hidden' : '';
+    const target = h && byId(h);
+    if (target && t === 'intro') setTimeout(() => target.scrollIntoView(), 0);
+    else if (target && map[h] === 'signup' && h !== 'signup') setTimeout(() => target.scrollIntoView(), 0);
+    else window.scrollTo(0, 0);
+  }
+  function route(){ const h = decodeURIComponent(location.hash.slice(1)); show(map[h] || 'intro', h); }
+  document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => {
+    history.replaceState(null, '', b.dataset.t === 'intro' ? location.pathname + location.search : '#' + b.dataset.t);
+    route();
+  }));
+  window.addEventListener('hashchange', route);
+  route();
+})();
 </script>
 </body>
 </html>
