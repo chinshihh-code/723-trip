@@ -605,6 +605,9 @@ async function load(){
     try {
       const j = await (await fetch(API_URL + "?t=" + Date.now())).json();
       bookings = j.bookings || [];
+      // 手動修正：試算表尚未更新前，以這裡為準
+      const FIX = {13:"camper"};
+      bookings.forEach(b => { if (FIX[b.seat]) b.room = FIX[b.seat]; });
       $("#updated").textContent = "更新時間：" + new Date().toLocaleString("zh-TW", {hour12:false});
     } catch(e){ $("#updated").textContent = "名單暫時無法載入，請重新整理。"; }
   } else {
