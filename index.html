@@ -580,12 +580,14 @@ $("#lf").addEventListener("submit", async e => {
   btn.disabled = false; btn.textContent = "送出午餐人數";
 });
 
+// 個別協商房費（優先於自動計算）
+const PRICE_FIX = {33: 9200}; // 33號：雅緻四人房 8000 + 加床 1200
 function depCell(b){
   if (b.status === "候補" || b.status === "只參加午餐") return "—";
   const r = roomOf(b.room); if (!r) return "—";
   const a = +b.adults || 0, k = +b.kids || 0;
   const exA = Math.max(0, a - r.base), exK = Math.max(0, k - Math.max(0, r.base - a));
-  const total = r.price + exA * (r.extraAdult||0) + exK * (r.extraKid||0);
+  const total = PRICE_FIX[b.seat] || (r.price + exA * (r.extraAdult||0) + exK * (r.extraKid||0));
   return money(Math.round(total*0.3)) + ((a || k) ? "" : " 起");
 }
 function showDeposit(){
@@ -594,7 +596,7 @@ function showDeposit(){
   const r = roomOf(b.room); if (!r) return;
   const a = +b.adults || 0, k = +b.kids || 0;
   const exA = Math.max(0, a - r.base), exK = Math.max(0, k - Math.max(0, r.base - a));
-  const total = r.price + exA * (r.extraAdult||0) + exK * (r.extraKid||0);
+  const total = PRICE_FIX[b.seat] || (r.price + exA * (r.extraAdult||0) + exK * (r.extraKid||0));
   const note = (a || k) ? `（${a}大${k}小）` : "（未含加人費用，如有加人請洽窗口）";
   $("#pest").innerHTML = `${r.icon} ${r.name} 房費 <b>${money(total)}</b>${note}<br>📌 訂金 30%：<b>${money(Math.round(total*0.3))}</b>，請於 11/27（五）前匯給軒銘爸爸／媽媽`;
 }
