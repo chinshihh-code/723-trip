@@ -158,7 +158,7 @@ footer a{color:#ffe2b8}
       <div class="cd-box"><b id="cd-d">-</b><span>天</span></div>
       <div class="cd-box"><b id="cd-h">-</b><span>時</span></div>
       <div class="cd-box"><b id="cd-m">-</b><span>分</span></div>
-      <span style="opacity:.9">11/25（三）截止｜房間有限，先搶先贏</span>
+      <span style="opacity:.9">延長至今晚 11/26（四）23:59 截止｜房間有限，先搶先贏</span>
     </div>
     <p style="margin:0 0 18px;font-weight:700;color:#ffe2b8">⚡ 時間緊迫，請大家先決定房型！房費 30% 訂金請於 11/27（五）前預付給軒銘爸爸／媽媽。</p>
     <a class="btn" href="#signup">立即選房報名</a>
@@ -208,7 +208,7 @@ footer a{color:#ffe2b8}
     <div class="panel rules" style="margin-bottom:18px">
       <b>📋 報名須知</b>
       <ol>
-        <li><b>11/25（三）23:59 截止</b>，依送出時間排序，<b>先搶先贏</b>。<b>時間緊迫，請大家先決定房型。</b></li>
+        <li><b>延長至 11/26（四）23:59 截止</b>，依送出時間排序，<b>先搶先贏</b>。<b>時間緊迫，請大家先決定房型。</b></li>
         <li>每戶限報 1 間房；房型額滿後仍可登記<b>候補</b>，有人取消時依序遞補，由窗口通知。</li>
         <li>送出後如需修改或取消，請直接聯絡窗口。</li>
         <li><b>訂金：房費的 30%，請於 11/27（五）前預付給軒銘爸爸／媽媽</b>（軒銘爸爸會先向民宿代付訂金）；尾款細節後續再討論。</li>
@@ -369,7 +369,7 @@ footer a{color:#ffe2b8}
 /* ========= 設定 ========= */
 // 部署 Google Apps Script 後，把網址貼在這裡
 const API_URL = "https://script.google.com/macros/s/AKfycbytzhnRWZaiibm5fKL_h3HIGdxP9ilqaNIKDNlj35d65vZPR0F26PAN3zxOkvP1-s2B/exec";
-const DEADLINE = new Date("2026-11-25T23:59:59+08:00");
+const DEADLINE = new Date("2026-11-26T23:59:59+08:00");
 
 const ROOMS = [
   { id:"camper", name:"雙人星空露營車", icon:"🚐", total:11, price:8000, orig:8800,
@@ -612,7 +612,7 @@ async function load(){
     $("#updated").textContent = "報名系統即將開放（目前顯示已預定家庭）";
   }
   renderRooms(); fillSeat(); renderList(); fillPaySeat(); fillLunchSeat();
-  if (new Date() > DEADLINE) $("#form-panel").innerHTML = '<div class="closed">報名已於 11/25 截止。如需候補或異動，請聯絡軒銘爸爸／媽媽。</div>';
+  if (new Date() > DEADLINE) $("#form-panel").innerHTML = '<div class="closed">報名已於 11/26 截止。如需候補或異動，請聯絡軒銘爸爸／媽媽。</div>';
 }
 load();
 setInterval(load, 60000);
