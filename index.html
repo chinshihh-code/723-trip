@@ -592,7 +592,7 @@ $("#f").addEventListener("submit", async e => {
 function renderList(){
   const c = counts(), wait = bookings.filter(b=>b.status==="候補").length;
   const fams = bookings.filter(b=>b.status!=="候補" && b.status!=="只參加午餐").length;
-  $("#stats").innerHTML = `<div class="stat">已報名 <b>${fams}</b> 戶</div>` + `<div class="stat">🐟 午餐 <b>${bookings.reduce((t,b)=>t+(+b.lunch||0),0)}</b> 人</div>` +
+  $("#stats").innerHTML = `<div class="stat">已報名 <b>${fams}</b> 戶</div>` + `<div class="stat">🐟 1/31午餐 <b>${bookings.reduce((t,b)=>t+(+b.lunch||0),0)}</b> 人</div>` +
     ROOMS.filter(r => !r.hidden && !r.lunchOnly).map(r => `<div class="stat">${r.icon} ${r.name} <b>${c[r.id]}/${r.total}</b></div>`).join("") +
     (wait ? `<div class="stat">候補 <b>${wait}</b> 戶</div>` : "");
   const wn = {};
@@ -601,7 +601,7 @@ function renderList(){
     let st = b.status === "已預定" ? '<span class="st pre">已預定</span>' : b.status === "候補" ? (wn[b.room]=(wn[b.room]||0)+1, `<span class="st wait">候補 ${wn[b.room]}</span>`) : b.status === "只參加午餐" ? '<span class="st pre">只參加午餐</span>' : '<span class="st ok">已報名</span>';
     const k = String(b.seat), no = roomNos[k] || "";
     const roomCell = roomEdit ? `<input class="rno" data-room="${k}" value="${String(roomDraft[k]||"").replace(/"/g,"&quot;")}" placeholder="房號">` : (no ? `<span class="rno-v">${no.replace(/[<>&]/g,"")}</span>` : '<span class="rno-e">—</span>');
-    return `<tr class="${b.status==='候補'?'wait':''}"><td class="c-no">${i+1}</td><td class="c-fam">${nameOf(b.seat)}</td><td class="c-room" data-l="房號">${roomCell}</td><td class="c-type" data-l="房型">${r?r.icon+' '+r.name:b.room}</td><td data-l="人數">${ppl}</td><td data-l="午餐">${b.lunch===""||b.lunch==null?"—":b.lunch+" 人"}</td><td class="c-st" data-l="狀態">${st}</td><td data-l="訂金">${depCell(b)}</td><td data-l="匯款">${(b.status==="候補"||b.status==="只參加午餐")?"—":(b.paid?'<span class="st ok">✅ 已匯款</span>':'<span class="st wait">未匯款</span>')}</td></tr>`;
+    return `<tr class="${b.status==='候補'?'wait':''}"><td class="c-no">${i+1}</td><td class="c-fam">${nameOf(b.seat)}</td><td class="c-room" data-l="房號">${roomCell}</td><td class="c-type" data-l="房型">${r?r.icon+' '+r.name:b.room}</td><td data-l="人數">${ppl}</td><td data-l="1/31午餐">${b.lunch===""||b.lunch==null?"—":b.lunch+" 人"}</td><td class="c-st" data-l="狀態">${st}</td><td data-l="訂金">${depCell(b)}</td><td data-l="匯款">${(b.status==="候補"||b.status==="只參加午餐")?"—":(b.paid?'<span class="st ok">✅ 已匯款</span>':'<span class="st wait">未匯款</span>')}</td></tr>`;
   }).join("") || '<tr><td colspan="9">尚無報名</td></tr>';
   roomBar();
 }
