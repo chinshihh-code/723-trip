@@ -8,10 +8,11 @@
  */
 const SHEET_ID = '1Z98JaVjBIy1NLi7MDcpORcnAdQelcWUetKz_U3B8m44';
 const SHEET_NAME = '行程';
+const ROOM_SHEET = '房號';
 const PASSWORD = '805trip';   // ← 編輯密碼，請改成你們自己的（改完要「管理部署作業」→ 編輯 → 新版本）
 
 function doGet() {
-  return out(readAll());
+  return out(Object.assign(readAll(), { rooms: readRooms() }));
 }
 
 function doPost(e) {
@@ -31,6 +32,22 @@ function doPost(e) {
       }
       writeAll(b.days || []);
       return out(Object.assign({ ok: true }, readAll()));
+    } finally {
+      lock.releaseLock();
+    }
+  }
+  if (b.action === 'saveRooms') {
+    if (b.pw !== PASSWORD) return out({ ok: false, error: '密碼錯誤' });
+    const lock = LockService.getScriptLock();
+    lock.waitLock(10000);
+    try {
+      const rooms = readRooms();
+      Object.keys(b.rooms || {}).forEach(function (k) {
+        const v = String(b.rooms[k] || '').trim();
+        if (v) rooms[k] = v; else delete rooms[k];
+      });
+      writeRooms(rooms);
+      return out({ ok: true, rooms: readRooms() });
     } finally {
       lock.releaseLock();
     }
@@ -82,4 +99,29 @@ function writeAll(days) {
 
 function out(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+
+/* ===== 房號（座號 → 房號），寫在「房號」分頁，也可以直接在試算表改 ===== */
+function roomSheet_() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  return ss.getSheetByName(ROOM_SHEET) || ss.insertSheet(ROOM_SHEET);
+}
+function readRooms() {
+  const sh = roomSheet_(), map = {};
+  if (sh.getLastRow() < 2) return map;
+  sh.getRange(2, 1, sh.getLastRow() - 1, 2).getDisplayValues().forEach(function (r) {
+    const seat = String(r[0]).trim(), no = String(r[1]).trim();
+    if (seat && no) map[seat] = no;
+  });
+  return map;
+}
+function writeRooms(map) {
+  const sh = roomSheet_();
+  const rows = [['座號', '房號']];
+  Object.keys(map).sort(function (a, b) { return Number(a) - Number(b); }).forEach(function (k) { rows.push([k, map[k]]); });
+  sh.clear();
+  const rg = sh.getRange(1, 1, rows.length, 2);
+  rg.setNumberFormat('@');
+  rg.setValues(rows);
+  sh.getRange(1, 1, 1, 2).setFontWeight('bold');
 }

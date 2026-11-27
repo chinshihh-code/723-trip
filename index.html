@@ -128,7 +128,6 @@ footer a{color:#ffe2b8}
   .form-grid,.days{grid-template-columns:1fr}
   .btn.ghost{margin:10px 0 0}
   .sticky-cta{display:block}
-  th:nth-child(4),td:nth-child(4){display:none}
 }
 
 
@@ -164,6 +163,24 @@ footer a{color:#ffe2b8}
   .ptable.editing td[data-l]::before{display:block}
   .ptable .ops{width:auto}
   .ptable:not(.editing) td:empty{display:none}
+}
+
+/* 已報名名單：房號＋手機卡片 */
+.ltable .rno{width:80px;font:inherit;padding:5px 8px;border:2px solid var(--sun);border-radius:8px}
+.rno-v{display:inline-block;background:var(--night2);color:#fff;font-weight:800;border-radius:8px;padding:1px 10px}
+.rno-e{color:#bbb}
+@media(max-width:640px){
+  .ltable thead{display:none}
+  .ltable,.ltable tbody{display:block;background:transparent}
+  .ltable tr{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+  .ltable tr.wait{background:#fffaf2}
+  .ltable td{border:none;padding:2px 0;font-size:.9rem}
+  .ltable td[data-l]::before{content:attr(data-l)"　";color:var(--muted);font-size:.78rem}
+  .ltable td.c-no{display:none}
+  .ltable td.c-fam{grid-column:1/2;font-weight:800;font-size:1.05rem;color:var(--night)}
+  .ltable td.c-room{grid-column:2/3;text-align:right}
+  .ltable td.c-type{grid-column:1/3;border-bottom:1px dashed var(--line);padding-bottom:6px;margin-bottom:4px}
+  .ltable td[colspan]{grid-column:1/3}
 }
 
 /* tabs */
@@ -301,10 +318,12 @@ footer a{color:#ffe2b8}
     <h2>已報名名單</h2>
     <p class="sub" id="updated">載入中…</p>
     <div class="stats" id="stats"></div>
+    <div class="plan-bar" id="room-bar"></div>
+    <div class="pmsg" id="room-msg"></div>
     <div style="overflow-x:auto">
-      <table>
-        <thead><tr><th>#</th><th>家庭</th><th>房型</th><th>人數</th><th>1/31午餐</th><th>狀態</th><th>訂金 30%</th><th>匯款</th></tr></thead>
-        <tbody id="tbody"><tr><td colspan="8">載入中…</td></tr></tbody>
+      <table class="ltable">
+        <thead><tr><th>#</th><th>家庭</th><th>房號</th><th>房型</th><th>人數</th><th>1/31午餐</th><th>狀態</th><th>訂金 30%</th><th>匯款</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="9">載入中…</td></tr></tbody>
       </table>
     </div>
 
@@ -580,8 +599,11 @@ function renderList(){
   $("#tbody").innerHTML = bookings.map((b,i) => {
     const r = roomOf(b.room); const ppl = b.adults ? `${b.adults}大${b.kids||0}小` : "—";
     let st = b.status === "已預定" ? '<span class="st pre">已預定</span>' : b.status === "候補" ? (wn[b.room]=(wn[b.room]||0)+1, `<span class="st wait">候補 ${wn[b.room]}</span>`) : b.status === "只參加午餐" ? '<span class="st pre">只參加午餐</span>' : '<span class="st ok">已報名</span>';
-    return `<tr class="${b.status==='候補'?'wait':''}"><td>${i+1}</td><td>${nameOf(b.seat)}</td><td>${r?r.icon+' '+r.name:b.room}</td><td>${ppl}</td><td>${b.lunch===""||b.lunch==null?"—":b.lunch+" 人"}</td><td>${st}</td><td>${depCell(b)}</td><td>${(b.status==="候補"||b.status==="只參加午餐")?"—":(b.paid?'<span class="st ok">✅ 已匯款</span>':'<span class="st wait">未匯款</span>')}</td></tr>`;
-  }).join("") || '<tr><td colspan="8">尚無報名</td></tr>';
+    const k = String(b.seat), no = roomNos[k] || "";
+    const roomCell = roomEdit ? `<input class="rno" data-room="${k}" value="${String(roomDraft[k]||"").replace(/"/g,"&quot;")}" placeholder="房號">` : (no ? `<span class="rno-v">${no.replace(/[<>&]/g,"")}</span>` : '<span class="rno-e">—</span>');
+    return `<tr class="${b.status==='候補'?'wait':''}"><td class="c-no">${i+1}</td><td class="c-fam">${nameOf(b.seat)}</td><td class="c-room" data-l="房號">${roomCell}</td><td class="c-type" data-l="房型">${r?r.icon+' '+r.name:b.room}</td><td data-l="人數">${ppl}</td><td data-l="午餐">${b.lunch===""||b.lunch==null?"—":b.lunch+" 人"}</td><td class="c-st" data-l="狀態">${st}</td><td data-l="訂金">${depCell(b)}</td><td data-l="匯款">${(b.status==="候補"||b.status==="只參加午餐")?"—":(b.paid?'<span class="st ok">✅ 已匯款</span>':'<span class="st wait">未匯款</span>')}</td></tr>`;
+  }).join("") || '<tr><td colspan="9">尚無報名</td></tr>';
+  roomBar();
 }
 
 function fillPaySeat(){
@@ -663,15 +685,56 @@ async function load(){
     bookings = SEED.slice();
     $("#updated").textContent = "報名系統即將開放（目前顯示已預定家庭）";
   }
-  renderRooms(); fillSeat(); renderList(); fillPaySeat(); fillLunchSeat();
+  renderRooms(); fillSeat(); renderList(); fillPaySeat(); fillLunchSeat(); loadRoomNos();
   if (new Date() > DEADLINE) $("#form-panel").innerHTML = '<div class="closed">報名已於 11/26 截止。如需候補或異動，請聯絡軒銘爸爸／媽媽。</div>';
 }
 load();
 setInterval(load, 60000);
 
+/* ========= 行程／房號後台（獨立 Apps Script） ========= */
+const ITIN_API = "https://script.google.com/macros/s/AKfycbz0-gyRHRYheoxeqIGXYUjAZukmkp3TaQ3BLZ6dNoGnLdU3Tis4RC4N4LioYWxtydT9kg/exec";
+window.EDIT_PW = "";
+let roomNos = {}, roomEdit = false, roomDraft = {};
+async function itinPost(body){ const r = await fetch(ITIN_API, { method:"POST", body: JSON.stringify(body) }); return r.json(); }
+
+function roomBar(){
+  const b = $("#room-bar"); if (!b) return;
+  if (!roomEdit){
+    b.innerHTML = window.EDIT_PW ? '<span class="sp"></span><button class="pbtn" id="room-go">🔑 填寫房號</button>'
+      : '<span class="sp"></span><input type="password" id="room-pw" placeholder="編輯密碼" autocomplete="off"><button class="pbtn" id="room-go">🔑 填寫房號</button>';
+    $("#room-go").onclick = roomLogin;
+    const i = $("#room-pw"); if (i) i.onkeydown = e => { if (e.key === "Enter") roomLogin(); };
+  } else {
+    b.innerHTML = '<span style="font-weight:700;color:var(--night2)">在「房號」欄輸入後按儲存</span><span class="sp"></span><button class="pbtn alt" id="room-cancel">取消</button><button class="pbtn save" id="room-save">💾 儲存房號</button>';
+    $("#room-cancel").onclick = () => { roomEdit = false; roomMsg("", ""); renderList(); };
+    $("#room-save").onclick = roomSave;
+  }
+}
+function roomMsg(t, x){ const m = $("#room-msg"); m.className = "pmsg" + (t ? " " + t : ""); m.textContent = x || ""; }
+async function roomLogin(){
+  if (!window.EDIT_PW){
+    const v = ($("#room-pw").value || "").trim(); if (!v) return roomMsg("warn", "請輸入編輯密碼");
+    try { const j = await itinPost({action:"check", pw:v}); if (!j.ok) return roomMsg("err", "密碼不正確"); window.EDIT_PW = v; }
+    catch(e){ return roomMsg("err", "連線失敗，請稍後再試"); }
+  }
+  roomEdit = true; roomDraft = Object.assign({}, roomNos); roomMsg("", ""); renderList();
+}
+async function roomSave(){
+  const btn = $("#room-save"); btn.disabled = true; btn.textContent = "儲存中…";
+  const send = {};
+  bookings.forEach(b => { const k = String(b.seat); if ((roomDraft[k]||"") !== (roomNos[k]||"")) send[k] = roomDraft[k] || ""; });
+  try { const j = await itinPost({action:"saveRooms", pw:window.EDIT_PW, rooms:send});
+    if (!j.ok){ roomMsg("err", j.error || "儲存失敗"); btn.disabled = false; btn.textContent = "💾 儲存房號"; return; }
+    roomNos = j.rooms || {}; roomEdit = false; roomMsg("ok", "✅ 房號已儲存"); renderList();
+  } catch(e){ roomMsg("err", "連線失敗，請再按一次儲存"); btn.disabled = false; btn.textContent = "💾 儲存房號"; }
+}
+async function loadRoomNos(){
+  try { const j = await (await fetch(ITIN_API + "?t=" + Date.now())).json(); if (!roomEdit){ roomNos = j.rooms || {}; renderList(); } } catch(e){}
+}
+document.addEventListener("input", e => { if (e.target.matches && e.target.matches("input[data-room]")) roomDraft[e.target.dataset.room] = e.target.value; });
+
 /* ========= 行程討論 ========= */
 (function(){
-  const ITIN_API = "https://script.google.com/macros/s/AKfycbz0-gyRHRYheoxeqIGXYUjAZukmkp3TaQ3BLZ6dNoGnLdU3Tis4RC4N4LioYWxtydT9kg/exec";   // ← 行程後台（獨立 Apps Script）部署網址
   const SEED_PLAN = [
     { date:"1/30（六）Day 1", items:[
       {time:"上午～中午", title:"台北出發", place:"台北 → 苗栗卓蘭", content:"各家自行開車前往"},
@@ -696,7 +759,11 @@ setInterval(load, 60000);
   function bar(){
     const b = $p("#plan-bar");
     if (!ITIN_API){ b.innerHTML = '<span class="st wait">後台尚未連線，目前顯示草案（無法存檔）</span>'; return; }
-    if (!editing){
+    if (!editing && window.EDIT_PW) pw = window.EDIT_PW;
+    if (!editing && pw){
+      b.innerHTML = '<span class="sp"></span><button class="pbtn" id="plan-login">✏️ 編輯行程</button>';
+      $p("#plan-login").onclick = () => { editing = true; dirty = false; render(); msg("ok", "已進入編輯模式，改完記得按「💾 儲存」"); };
+    } else if (!editing){
       b.innerHTML = '<span class="sp"></span><input type="password" id="plan-pw" placeholder="編輯密碼" autocomplete="off"><button class="pbtn" id="plan-login">✏️ 編輯行程</button>';
       $p("#plan-login").onclick = login;
       $p("#plan-pw").onkeydown = e => { if (e.key === "Enter") login(); };
@@ -765,7 +832,7 @@ setInterval(load, 60000);
     msg("", "");
     try { const j = await post({action:"check", pw:v});
       if (!j.ok) return msg("err", "密碼不正確");
-      pw = v; editing = true; dirty = false; render(); msg("ok", "已進入編輯模式，改完記得按「💾 儲存」");
+      pw = v; window.EDIT_PW = v; editing = true; dirty = false; render(); msg("ok", "已進入編輯模式，改完記得按「💾 儲存」");
     } catch(e){ msg("err", "連線失敗，請稍後再試"); }
   }
   async function save(){
