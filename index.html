@@ -131,11 +131,46 @@ footer a{color:#ffe2b8}
   th:nth-child(4),td:nth-child(4){display:none}
 }
 
+
+/* plan（行程討論） */
+.plan-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 18px}
+.plan-bar .sp{flex:1}
+.plan-bar input{font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:10px;width:150px}
+.pbtn{font:inherit;font-weight:700;border:none;border-radius:10px;padding:8px 14px;cursor:pointer;background:var(--night2);color:#fff}
+.pbtn.alt{background:#fff;color:var(--night2);border:1px solid var(--night2)}
+.pbtn.save{background:var(--sun)}
+.pbtn.del{background:#fff;color:var(--red);border:1px solid #f0c4c4;padding:4px 9px;font-size:.85rem}
+.pbtn.mv{background:#fff;color:var(--muted);border:1px solid var(--line);padding:4px 7px;font-size:.85rem}
+.pbtn:disabled{opacity:.5;cursor:not-allowed}
+.pday{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:18px}
+.pday-h{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.pday-h h3{margin:0;color:var(--night);font-size:1.15rem}
+.pday-h input{font:inherit;font-weight:700;font-size:1.05rem;padding:6px 10px;border:1px solid var(--line);border-radius:8px;flex:1;min-width:0}
+.ptable th{background:var(--grass);white-space:nowrap}
+.ptable td{vertical-align:top}
+.ptable td.tm{font-weight:700;color:var(--grass);white-space:nowrap}
+.ptable textarea,.ptable input{width:100%;font:inherit;font-size:.92rem;padding:6px 8px;border:1px solid var(--line);border-radius:8px;resize:vertical}
+.ptable .ops{white-space:nowrap;width:1%}
+.pempty{color:var(--muted);text-align:center;padding:14px}
+.pmsg{padding:8px 12px;border-radius:10px;font-weight:600;margin:0 0 14px;display:none}
+.pmsg.ok{display:block;background:var(--grass-l);color:#2c5a20}
+.pmsg.err{display:block;background:#fdeaea;color:var(--red)}
+.pmsg.warn{display:block;background:#fff3e0;color:var(--sun-d)}
+@media(max-width:640px){
+  .ptable thead{display:none}
+  .ptable tr{display:block;border-bottom:1px solid var(--line);padding:6px 0}
+  .ptable td{display:block;border:none;padding:3px 8px}
+  .ptable td[data-l]::before{content:attr(data-l)"：";color:var(--muted);font-size:.8rem}
+  .ptable.editing td[data-l]::before{display:block}
+  .ptable .ops{width:auto}
+  .ptable:not(.editing) td:empty{display:none}
+}
+
 /* tabs */
 .tabs{position:sticky;top:0;z-index:30;display:flex;background:var(--night);box-shadow:0 2px 10px #0003}
 .tabs button{flex:1;border:none;background:transparent;color:#dfe3f0;font:inherit;font-weight:700;font-size:1rem;padding:13px 6px;cursor:pointer;border-bottom:3px solid transparent}
 .tabs button.on{color:#fff;border-bottom-color:var(--sun);background:#ffffff14}
-@media(max-width:640px){.tabs button{font-size:.92rem;padding:12px 4px}}
+@media(max-width:640px){.tabs button{font-size:.8rem;padding:12px 2px;white-space:nowrap}}
 </style>
 </head>
 <body>
@@ -143,6 +178,7 @@ footer a{color:#ffe2b8}
   <button type="button" data-t="intro">🌄 活動介紹</button>
   <button type="button" data-t="signup">📝 選房報名</button>
   <button type="button" data-t="list">📋 已報名名單</button>
+  <button type="button" data-t="plan">🗓️ 行程討論</button>
 </nav>
 
 <!-- ===== 主視覺 ===== -->
@@ -313,6 +349,17 @@ footer a{color:#ffe2b8}
       </form>
       <div class="msg" id="pmsg"></div>
     </div>
+  </div>
+</section>
+
+<!-- ===== 行程討論 ===== -->
+<section id="plan">
+  <div class="wrap">
+    <h2>🗓️ 行程討論</h2>
+    <p class="sub">策劃家長在這裡排行程，存檔後所有人看到的都是同一份。<span id="plan-updated"></span></p>
+    <div class="plan-bar" id="plan-bar"></div>
+    <div class="pmsg" id="plan-msg"></div>
+    <div id="plan-days"></div>
   </div>
 </section>
 
@@ -622,6 +669,131 @@ async function load(){
 load();
 setInterval(load, 60000);
 
+/* ========= 行程討論 ========= */
+(function(){
+  const ITIN_API = "";   // ← 行程後台（獨立 Apps Script）部署網址
+  const SEED_PLAN = [
+    { date:"1/30（六）Day 1", items:[
+      {time:"上午～中午", title:"台北出發", place:"台北 → 苗栗卓蘭", content:"各家自行開車前往"},
+      {time:"15:30", title:"辦理入住", place:"自然風情景觀渡假民宿", content:"入住後草原自由活動"},
+      {time:"時間確認中", title:"🍕 披薩 DIY", place:"民宿", content:""},
+      {time:"時間確認中", title:"🐷 烤乳豬晚餐", place:"民宿", content:"費用確認中"},
+      {time:"晚上", title:"✨ 星空夜聊", place:"草原／露營車區", content:"22:00 後請降低音量"} ]},
+    { date:"1/31（日）Day 2", items:[
+      {time:"早上", title:"民宿早餐、晨間散步", place:"民宿", content:""},
+      {time:"11:00 前", title:"退房", place:"民宿", content:""},
+      {time:"中午", title:"🐟 鯉魚潭活魚午餐", place:"鯉魚潭", content:"餐廳與費用後續公告"},
+      {time:"午餐後", title:"自由順遊", place:"勝興車站、龍騰斷橋、天空之城、大湖酒莊…", content:"各家自由安排"},
+      {time:"下午", title:"返家", place:"", content:""} ]}
+  ];
+  const $p = s => document.querySelector(s);
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  let days = [], version = "0", editing = false, dirty = false, pw = "";
+
+  function msg(type, text){ const m = $p("#plan-msg"); m.className = "pmsg" + (type ? " " + type : ""); m.textContent = text || ""; }
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+
+  function bar(){
+    const b = $p("#plan-bar");
+    if (!ITIN_API){ b.innerHTML = '<span class="st wait">後台尚未連線，目前顯示草案（無法存檔）</span>'; return; }
+    if (!editing){
+      b.innerHTML = '<span class="sp"></span><input type="password" id="plan-pw" placeholder="編輯密碼" autocomplete="off"><button class="pbtn" id="plan-login">✏️ 編輯行程</button>';
+      $p("#plan-login").onclick = login;
+      $p("#plan-pw").onkeydown = e => { if (e.key === "Enter") login(); };
+    } else {
+      b.innerHTML = '<button class="pbtn alt" id="plan-addday">＋ 新增日期</button><span class="sp"></span>'
+        + '<button class="pbtn alt" id="plan-cancel">取消</button><button class="pbtn save" id="plan-save">💾 儲存</button>';
+      $p("#plan-addday").onclick = () => { days.push({date:"", items:[{time:"",title:"",place:"",content:""}]}); dirty = true; render(); };
+      $p("#plan-cancel").onclick = () => { if (dirty && !confirm("尚未儲存的修改會消失，確定取消？")) return; editing = false; dirty = false; load(); };
+      $p("#plan-save").onclick = save;
+    }
+  }
+
+  function render(){
+    bar();
+    const box = $p("#plan-days");
+    if (!days.length){ box.innerHTML = '<div class="pday pempty">目前沒有行程' + (editing ? '，請按「＋ 新增日期」' : '') + '</div>'; return; }
+    box.innerHTML = days.map((d, di) => {
+      const head = editing
+        ? `<div class="pday-h"><input data-d="${di}" data-k="date" value="${esc(d.date)}" placeholder="日期，例如 1/30（六）Day 1">
+             <button class="pbtn mv" data-act="dup" data-d="${di}" title="上移">↑</button><button class="pbtn mv" data-act="ddown" data-d="${di}" title="下移">↓</button>
+             <button class="pbtn del" data-act="delday" data-d="${di}">刪除此日</button></div>`
+        : `<div class="pday-h"><h3>📅 ${esc(d.date) || "（未填日期）"}</h3></div>`;
+      const rows = d.items.map((it, ii) => editing
+        ? `<tr>
+            <td data-l="時間"><input data-d="${di}" data-i="${ii}" data-k="time" value="${esc(it.time)}" placeholder="15:30"></td>
+            <td data-l="行程"><input data-d="${di}" data-i="${ii}" data-k="title" value="${esc(it.title)}"></td>
+            <td data-l="地點"><input data-d="${di}" data-i="${ii}" data-k="place" value="${esc(it.place)}"></td>
+            <td data-l="內容"><textarea rows="1" data-d="${di}" data-i="${ii}" data-k="content">${esc(it.content)}</textarea></td>
+            <td class="ops"><button class="pbtn mv" data-act="up" data-d="${di}" data-i="${ii}">↑</button><button class="pbtn mv" data-act="down" data-d="${di}" data-i="${ii}">↓</button>
+              <button class="pbtn del" data-act="del" data-d="${di}" data-i="${ii}">刪除</button></td></tr>`
+        : `<tr><td class="tm" data-l="時間">${esc(it.time)}</td><td data-l="行程"><b>${esc(it.title)}</b></td><td data-l="地點">${esc(it.place)}</td><td data-l="內容">${esc(it.content).replace(/\n/g,"<br>")}</td></tr>`
+      ).join("") || `<tr><td colspan="${editing?5:4}" class="pempty">這天還沒有行程</td></tr>`;
+      return `<div class="pday">${head}
+        <table class="ptable${editing?" editing":""}"><thead><tr><th style="width:14%">時間</th><th style="width:22%">行程</th><th style="width:22%">地點</th><th>內容</th>${editing?"<th></th>":""}</tr></thead>
+        <tbody>${rows}</tbody></table>
+        ${editing?`<div style="margin-top:10px"><button class="pbtn alt" data-act="add" data-d="${di}">＋ 新增一列</button></div>`:""}</div>`;
+    }).join("");
+  }
+
+  $p("#plan-days").addEventListener("input", e => {
+    const t = e.target, d = t.dataset.d, i = t.dataset.i, k = t.dataset.k;
+    if (d == null || !k) return;
+    if (i == null) days[d][k] = t.value; else days[d].items[i][k] = t.value;
+    dirty = true;
+  });
+  $p("#plan-days").addEventListener("click", e => {
+    const t = e.target.closest("[data-act]"); if (!t) return;
+    const a = t.dataset.act, d = +t.dataset.d, i = +t.dataset.i, its = days[d].items;
+    const swap = (arr, x, y) => { if (y < 0 || y >= arr.length) return; [arr[x], arr[y]] = [arr[y], arr[x]]; };
+    if (a === "add") its.push({time:"",title:"",place:"",content:""});
+    else if (a === "del") its.splice(i, 1);
+    else if (a === "up") swap(its, i, i-1);
+    else if (a === "down") swap(its, i, i+1);
+    else if (a === "dup") swap(days, d, d-1);
+    else if (a === "ddown") swap(days, d, d+1);
+    else if (a === "delday"){ if (!confirm(`確定刪除「${days[d].date || "這一天"}」和底下所有行程？`)) return; days.splice(d, 1); }
+    dirty = true; render();
+  });
+
+  async function post(body){
+    const r = await fetch(ITIN_API, { method:"POST", body: JSON.stringify(body) }); // text/plain 避免 CORS 預檢
+    return r.json();
+  }
+  async function login(){
+    const v = $p("#plan-pw").value.trim(); if (!v) return msg("warn", "請輸入編輯密碼");
+    msg("", "");
+    try { const j = await post({action:"check", pw:v});
+      if (!j.ok) return msg("err", "密碼不正確");
+      pw = v; editing = true; dirty = false; render(); msg("ok", "已進入編輯模式，改完記得按「💾 儲存」");
+    } catch(e){ msg("err", "連線失敗，請稍後再試"); }
+  }
+  async function save(){
+    const clean = days.map(d => ({ date:(d.date||"").trim(), items:d.items.filter(it => it.time||it.title||it.place||it.content) }));
+    if (clean.some(d => !d.date)) return msg("err", "有日期還沒填，請填上日期或刪除那一天");
+    const btn = $p("#plan-save"); btn.disabled = true; btn.textContent = "儲存中…";
+    try { const j = await post({action:"save", pw, version, days:clean});
+      if (j.ok){ apply(j); editing = false; dirty = false; render(); msg("ok", "✅ 已儲存，大家重新整理就會看到"); }
+      else if (j.conflict){ apply(j.data); dirty = false; render(); msg("warn", j.error); }
+      else { msg("err", j.error || "儲存失敗"); btn.disabled = false; btn.textContent = "💾 儲存"; }
+    } catch(e){ msg("err", "連線失敗，請再按一次儲存"); btn.disabled = false; btn.textContent = "💾 儲存"; }
+  }
+  function apply(j){
+    days = (j && j.days) ? j.days : clone(SEED_PLAN);
+    days.forEach(d => d.items = d.items || []);
+    version = (j && j.version) || "0";
+    $p("#plan-updated").textContent = (j && j.updated) ? `（最後更新：${j.updated}）` : "";
+  }
+  async function load(){
+    if (!ITIN_API){ apply(null); render(); return; }
+    try { apply(await (await fetch(ITIN_API + "?t=" + Date.now())).json()); }
+    catch(e){ apply(null); msg("err", "行程暫時無法載入，目前顯示草案"); }
+    render();
+  }
+  window.addEventListener("beforeunload", e => { if (editing && dirty){ e.preventDefault(); e.returnValue = ""; } });
+  load();
+})();
+
 /* ========= 分頁 ========= */
 (function(){
   const byId = id => document.getElementById(id);
@@ -630,8 +802,8 @@ setInterval(load, 60000);
   const hl = document.querySelector('.hl-grid') && document.querySelector('.hl-grid').closest('section');
   const sw = byId('signup').querySelector('.wrap');
   ['lunch-panel','pay-panel'].forEach(id => { const el = byId(id); if (el) sw.appendChild(el); });
-  const groups = { intro:[hero, vid, hl, byId('rooms'), byId('schedule'), byId('faq')], signup:[byId('signup')], list:[byId('list')] };
-  const map = { signup:'signup', list:'list', 'lunch-panel':'signup', 'pay-panel':'signup' };
+  const groups = { intro:[hero, vid, hl, byId('rooms'), byId('schedule'), byId('faq')], signup:[byId('signup')], list:[byId('list')], plan:[byId('plan')] };
+  const map = { signup:'signup', list:'list', plan:'plan', 'lunch-panel':'signup', 'pay-panel':'signup' };
   function show(t, h){
     Object.entries(groups).forEach(([k, els]) => els.forEach(el => { if (el) el.style.display = (k === t) ? '' : 'none'; }));
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
